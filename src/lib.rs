@@ -1,6 +1,7 @@
 pub mod http;
 
 use async_trait::async_trait;
+use std::collections::HashMap;
 
 /// Any resource, identified by an IRI string.
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
@@ -52,7 +53,7 @@ pub struct Variable(String);
 /// Results from a selection query.
 #[derive(Debug)]
 pub struct SelectionResult {
-    pub vars: Vec<Variable>,
+    pub variables: Vec<Variable>,
     pub bindings: Vec<Vec<rdf::node::Node>>,
 }
 
@@ -63,5 +64,5 @@ pub trait GraphStore {
     async fn import(&self, graph: Graph, file: DataFile);
 
     /// Performs a SPARQL query.
-    async fn select(&self, query: &Selection) -> SelectionResult;
+    async fn select(&self, query: Selection) -> SelectionResult;
 }

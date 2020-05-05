@@ -1,5 +1,5 @@
 use graph_store::http::Dataset;
-use graph_store::{DataFile, Graph, GraphStore};
+use graph_store::{DataFile, Graph, GraphStore, Selection};
 use uuid::Uuid;
 
 #[tokio::test]
@@ -15,6 +15,11 @@ async fn create_and_delete() {
     );
 
     let dataset = Dataset::get_or_create(&client, base, &name).await;
+
     dataset.import(Graph::Default, file).await;
-    // dataset.delete().await;
+
+    let result = dataset.select(Selection::of_triples()).await;
+    println!("selection: {:?}", result);
+
+    dataset.delete().await;
 }

@@ -1,6 +1,8 @@
-use crate::{DataFile, Graph, GraphStore, Resource, Selection, SelectionResult};
+use crate::{DataFile, Graph, GraphStore, Resource, Selection, SelectionResult, Variable};
 
 use async_trait::async_trait;
+use serde::Deserialize;
+use std::collections::HashMap;
 
 /// Implementation of https://www.w3.org/TR/sparql11-http-rdf-update/
 pub struct Dataset<'a> {
@@ -63,6 +65,45 @@ impl Dataset<'_> {
     }
 }
 
+#[derive(Deserialize, Debug)]
+struct QueryResponseHead {
+    vars: Vec<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "type")]
+#[allow(non_camel_case_types)]
+enum QueryResponseValue {
+    uri { value: String },
+    literal { value: String },
+}
+
+impl QueryResponseValue {
+    fn to_node(&self) -> rdf::node::Node {
+        match self {
+            QueryResponseValue::uri { value } => rdf::node::Node::UriNode {
+                uri: rdf::uri::Uri::new(value.to_string()),
+            },
+            QueryResponseValue::literal { value } => rdf::node::Node::LiteralNode {
+                literal: value.to_string(),
+                data_type: None,
+                language: None,
+            },
+        }
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct QueryResponseResults {
+    bindings: Vec<HashMap<String, QueryResponseValue>>,
+}
+
+#[derive(Deserialize, Debug)]
+struct QueryResponse {
+    head: QueryResponseHead,
+    results: QueryResponseResults,
+}
+
 #[async_trait]
 impl GraphStore for Dataset<'_> {
     async fn import(&self, graph: Graph, file: DataFile) {
@@ -88,8 +129,38 @@ impl GraphStore for Dataset<'_> {
         };
     }
 
-    async fn select(&self, query: &Selection) -> SelectionResult {
-        unimplemented!()
+    async fn select(&self, selection: Selection) -> SelectionResult {
+        let form = [("query", selection.sparql_value)];
+        let path = self.base.join(&self.name).unwrap();
+        let response = self.client.post(path).form(&form).send().await.unwrap();
+        let status = response.status();
+        let response: QueryResponse = response.json::<QueryResponse>().await.unwrap();
+        match status {
+            reqwest::StatusCode::OK => {
+                let variables = response
+                    .head
+                    .vars
+                    .iter()
+                    .map(|s| Variable(s.to_string()))
+                    .collect::<Vec<_>>();
+                let bindings = response
+                    .results
+                    .bindings
+                    .iter()
+                    .map(|binding| {
+                        variables
+                            .iter()
+                            .map(|v| binding.get(&v.0).unwrap().to_node())
+                            .collect::<Vec<_>>()
+                    })
+                    .collect::<Vec<_>>();
+                SelectionResult {
+                    variables,
+                    bindings,
+                }
+            }
+            code => panic!("Unexpected status {}.", code),
+        }
     }
 }
 
