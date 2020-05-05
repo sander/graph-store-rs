@@ -1,7 +1,11 @@
 [package]
 name = "graph-store"
+description = "Access to graph stores over the SPARQL 1.1 Graph Store HTTP Protocol"
 version = "0.1.0"
 authors = ["Sander Dijkhuis <mail@sanderdijkhuis.nl>"]
+license = "MIT"
+repository = "https://github.com/sander/graph-store-rs"
+readme = "README.md"
 edition = "2018"
 
 [dependencies]
@@ -10,12 +14,8 @@ tokio = { version = "0.2", features = ["full"] }
 url = "2.1.1"
 async-trait = "0.1.24"
 rdf = "0.1.4"
-#serde = { version = "1.0.105", features = ["derive"] }
-#serde_json = "1.0"
-#futures = "0.3.4"
 
 [dev-dependencies]
-#cucumber = { package = "cucumber_rust", version = "^0.6.0" }
 tokio-test = "0.2.1"
 mockito = "0.25.1"
 uuid = { version = "0.8", features = ["v4"] }
