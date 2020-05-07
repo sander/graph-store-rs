@@ -37,14 +37,9 @@ impl<A> Table<A> {
             bindings: bindings
                 .into_iter()
                 .map(|mut binding| {
-                    variables
-                        .iter()
-                        .map(|v| {
-                            (
-                                Variable::from(v.as_ref()),
-                                transform(binding.remove(v).unwrap()),
-                            )
-                        })
+                    binding
+                        .into_iter()
+                        .map(|(k, v)| (Variable::from(k.as_str()), transform(v)))
                         .collect()
                 })
                 .collect(),

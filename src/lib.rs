@@ -1,3 +1,4 @@
+pub mod doc;
 pub mod http;
 pub mod table;
 
@@ -8,6 +9,12 @@ use rdf::node::Node;
 /// Any resource, identified by an IRI string.
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
 pub struct Resource(String);
+
+impl From<&str> for Resource {
+    fn from(s: &str) -> Self {
+        Resource(s.to_string())
+    }
+}
 
 /// The default graph or a named graph of a graph store.
 pub enum Graph {
@@ -43,6 +50,38 @@ impl Selection {
 
     pub fn of_graphs() -> Selection {
         Selection::unsafe_from("SELECT DISTINCT ?graph WHERE { GRAPH ?graph { ?s ?p ?o } }")
+    }
+
+    pub fn of_resources_from_named_graphs() -> Selection {
+        Selection::unsafe_from("SELECT ?s WHERE { GRAPH ?g { ?s ?p ?o } }")
+    }
+
+    pub fn of_relations_from(resource: &Resource) -> Selection {
+        Selection::unsafe_from(&format!(
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?predicate ?predicate_label ?object ?object_label
+WHERE {{
+  GRAPH ?g1 {{ <{}> ?predicate ?object }}
+  OPTIONAL {{ GRAPH ?g2 {{ ?predicate rdfs:label ?predicate_label }} }}
+  OPTIONAL {{ GRAPH ?g3 {{ ?object rdfs:label ?object_label }} }}
+}}",
+            resource.0
+        ))
+    }
+
+    pub fn of_relations_to(resource: &Resource) -> Selection {
+        Selection::unsafe_from(&format!(
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?subject ?subject_label ?predicate ?predicate_label
+WHERE {{
+  GRAPH ?g1 {{ ?subject ?predicate <{}> }}
+  OPTIONAL {{ GRAPH ?g2 {{ ?predicate rdfs:label ?predicate_label }} }}
+  OPTIONAL {{ GRAPH ?g3 {{ ?subject rdfs:label ?subject_label }} }}
+}}",
+            resource.0
+        ))
     }
 
     pub fn unsafe_from(value: &str) -> Selection {
