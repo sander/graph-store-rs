@@ -83,6 +83,7 @@ pub async fn export_to_html<'a>(dataset: &'a Dataset<'a>) {
             <html>
                 <head>
                     <title>{ text!("{}", title) }</title>
+                    <link rel="stylesheet" href="main.css"/>
                 </head>
                 <body>
                     <h1>{ text!("{}",title) }</h1>
@@ -93,6 +94,9 @@ pub async fn export_to_html<'a>(dataset: &'a Dataset<'a>) {
             </html>
         );
 
-        fs::write(file_names.get(&c).unwrap(), doc.to_string());
+        fs::write(
+            file_names.get(&c).unwrap(),
+            format!("<!doctype html>{}", doc.to_string()),
+        );
     }
 }
