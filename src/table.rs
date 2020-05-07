@@ -22,20 +22,29 @@ impl From<&str> for Variable {
 }
 
 #[derive(Debug)]
-pub struct KeyEntryTable<A> {
+pub struct Table<A> {
     pub variables: Vec<Variable>,
     pub bindings: Vec<HashMap<Variable, A>>,
 }
 
-impl<A> KeyEntryTable<A> {
-    fn from(variables: Vec<String>, bindings: Vec<HashMap<String, A>>) -> KeyEntryTable<A> {
-        KeyEntryTable {
+impl<A> Table<A> {
+    pub fn from<B>(
+        variables: Vec<String>,
+        bindings: Vec<HashMap<String, B>>,
+        transform: fn(B) -> A,
+    ) -> Table<A> {
+        Table {
             bindings: bindings
                 .into_iter()
                 .map(|mut binding| {
                     variables
                         .iter()
-                        .map(|v| (Variable::from(v.as_ref()), binding.remove(v).unwrap()))
+                        .map(|v| {
+                            (
+                                Variable::from(v.as_ref()),
+                                transform(binding.remove(v).unwrap()),
+                            )
+                        })
                         .collect()
                 })
                 .collect(),
@@ -49,7 +58,7 @@ impl<A> KeyEntryTable<A> {
 
 #[cfg(test)]
 mod tests {
-    use crate::table::KeyEntryTable;
+    use crate::table::Table;
     use crate::table::Variable;
     use std::collections::HashMap;
     use std::iter::FromIterator;
@@ -61,7 +70,7 @@ mod tests {
             HashMap::from_iter(vec![("a".to_string(), "c"), ("b".to_string(), "d")].into_iter()),
             HashMap::from_iter(vec![("b".to_string(), "f"), ("a".to_string(), "e")].into_iter()),
         ];
-        let table = KeyEntryTable::from(vars, bindings);
+        let table = Table::from(vars, bindings, |a| a);
         println!("Result: {:?}", table);
     }
 
@@ -72,7 +81,7 @@ mod tests {
             HashMap::from_iter(vec![("a".to_string(), "c"), ("b".to_string(), "d")].into_iter()),
             HashMap::from_iter(vec![("b".to_string(), "f"), ("a".to_string(), "e")].into_iter()),
         ];
-        let table = KeyEntryTable::from(vars, bindings);
+        let table = Table::from(vars, bindings, |a| a);
         for v in &table.variables {
             print!("|{:?}", v.name);
         }

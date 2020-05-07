@@ -1,7 +1,9 @@
 pub mod http;
 pub mod table;
 
+use crate::table::Table;
 use async_trait::async_trait;
+use rdf::node::Node;
 
 /// Any resource, identified by an IRI string.
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
@@ -46,17 +48,6 @@ impl Selection {
     }
 }
 
-/// A variable in a query result.
-#[derive(Debug)]
-pub struct Variable(String);
-
-/// Results from a selection query.
-#[derive(Debug)]
-pub struct SelectionResult {
-    pub variables: Vec<Variable>,
-    pub bindings: Vec<Vec<rdf::node::Node>>,
-}
-
 /// A collection of RDF graphs.
 #[async_trait]
 pub trait GraphStore {
@@ -64,5 +55,5 @@ pub trait GraphStore {
     async fn import(&self, graph: Graph, file: DataFile);
 
     /// Performs a SPARQL query.
-    async fn select(&self, query: Selection) -> SelectionResult;
+    async fn select(&self, query: Selection) -> Table<Node>;
 }

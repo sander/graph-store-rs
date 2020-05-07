@@ -1,6 +1,8 @@
-use crate::{DataFile, Graph, GraphStore, Resource, Selection, SelectionResult, Variable};
+use crate::{DataFile, Graph, GraphStore, Resource, Selection};
 
+use crate::table::Table;
 use async_trait::async_trait;
+use rdf::node::Node;
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -129,7 +131,7 @@ impl GraphStore for Dataset<'_> {
         };
     }
 
-    async fn select(&self, selection: Selection) -> SelectionResult {
+    async fn select(&self, selection: Selection) -> Table<Node> {
         let form = [("query", selection.sparql_value)];
         let path = self.base.join(&self.name).unwrap();
         let response = self.client.post(path).form(&form).send().await.unwrap();
@@ -137,27 +139,9 @@ impl GraphStore for Dataset<'_> {
         let response: QueryResponse = response.json::<QueryResponse>().await.unwrap();
         match status {
             reqwest::StatusCode::OK => {
-                let variables = response
-                    .head
-                    .vars
-                    .iter()
-                    .map(|s| Variable(s.to_string()))
-                    .collect::<Vec<_>>();
-                let bindings = response
-                    .results
-                    .bindings
-                    .iter()
-                    .map(|binding| {
-                        variables
-                            .iter()
-                            .map(|v| binding.get(&v.0).unwrap().to_node())
-                            .collect::<Vec<_>>()
-                    })
-                    .collect::<Vec<_>>();
-                SelectionResult {
-                    variables,
-                    bindings,
-                }
+                Table::from(response.head.vars, response.results.bindings, |b| {
+                    b.to_node()
+                })
             }
             code => panic!("Unexpected status {}.", code),
         }

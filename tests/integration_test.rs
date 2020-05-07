@@ -3,7 +3,7 @@ use graph_store::{DataFile, Graph, GraphStore, Selection};
 use uuid::Uuid;
 
 #[tokio::test]
-async fn create_and_delete() {
+async fn create_select_and_delete() {
     let client = reqwest::Client::new();
     let base = url::Url::parse("http://localhost:3030").unwrap();
     let name = format!("test-{}", Uuid::new_v4());
