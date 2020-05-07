@@ -1,9 +1,9 @@
 use graph_store::http::Dataset;
-use graph_store::{DataFile, Graph, GraphStore, Selection};
+use graph_store::{DataFile, DescribeQuery, Graph, GraphStore, Selection};
 use uuid::Uuid;
 
 #[tokio::test]
-async fn create_select_and_delete() {
+async fn create_select_describe_and_delete() {
     let client = reqwest::Client::new();
     let base = url::Url::parse("http://localhost:3030").unwrap();
     let name = format!("test-{}", Uuid::new_v4());
@@ -20,6 +20,16 @@ async fn create_select_and_delete() {
 
     let result = dataset.select(Selection::of_triples()).await;
     println!("selection: {:?}", result);
+
+    let result = dataset
+        .describe(DescribeQuery::unsafe_from(
+            "DESCRIBE ?x
+WHERE {
+  ?x ?y ?z
+}",
+        ))
+        .await;
+    println!("description: {:?}", result);
 
     dataset.delete().await;
 }

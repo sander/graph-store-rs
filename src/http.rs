@@ -1,8 +1,10 @@
-use crate::{DataFile, Graph, GraphStore, Resource, Selection};
+use crate::{DataFile, DescribeQuery, Graph, GraphStore, Resource, Selection};
 
 use crate::table::Table;
 use async_trait::async_trait;
 use rdf::node::Node;
+use rdf::reader::rdf_parser::RdfParser;
+use rdf::reader::turtle_parser::TurtleParser;
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -142,6 +144,25 @@ impl GraphStore for Dataset<'_> {
                 Table::from(response.head.vars, response.results.bindings, |b| {
                     b.to_node()
                 })
+            }
+            code => panic!("Unexpected status {}.", code),
+        }
+    }
+
+    async fn describe(&self, query: DescribeQuery) -> rdf::graph::Graph {
+        let form = [("query", query.sparql_value)];
+        let path = self.base.join(&self.name).unwrap();
+        let response = self.client.post(path).form(&form).send().await.unwrap();
+        let status = response.status();
+        let response: String = response.text().await.unwrap();
+        match status {
+            reqwest::StatusCode::OK => {
+                let mut reader = TurtleParser::from_string(response);
+
+                match reader.decode() {
+                    Ok(graph) => graph,
+                    Err(e) => panic!("Could not parse: {:?}", e),
+                }
             }
             code => panic!("Unexpected status {}.", code),
         }

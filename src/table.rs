@@ -59,7 +59,6 @@ impl<A> Table<A> {
 #[cfg(test)]
 mod tests {
     use crate::table::Table;
-    use crate::table::Variable;
     use std::collections::HashMap;
     use std::iter::FromIterator;
 

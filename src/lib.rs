@@ -41,8 +41,24 @@ impl Selection {
         Selection::unsafe_from("SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 25")
     }
 
+    pub fn of_graphs() -> Selection {
+        Selection::unsafe_from("SELECT DISTINCT ?graph WHERE { GRAPH ?graph { ?s ?p ?o } }")
+    }
+
     pub fn unsafe_from(value: &str) -> Selection {
         Selection {
+            sparql_value: value.to_string(),
+        }
+    }
+}
+
+pub struct DescribeQuery {
+    sparql_value: String,
+}
+
+impl DescribeQuery {
+    pub fn unsafe_from(value: &str) -> DescribeQuery {
+        DescribeQuery {
             sparql_value: value.to_string(),
         }
     }
@@ -56,4 +72,6 @@ pub trait GraphStore {
 
     /// Performs a SPARQL query.
     async fn select(&self, query: Selection) -> Table<Node>;
+
+    async fn describe(&self, query: DescribeQuery) -> rdf::graph::Graph;
 }
