@@ -1,7 +1,7 @@
 pub mod http;
 pub mod table;
 
-use crate::table::Table;
+use crate::table::{Table, Variable};
 use async_trait::async_trait;
 use rdf::node::Node;
 
@@ -74,4 +74,25 @@ pub trait GraphStore {
     async fn select(&self, query: Selection) -> Table<Node>;
 
     async fn describe(&self, query: DescribeQuery) -> rdf::graph::Graph;
+
+    async fn describe_everything(&self) -> rdf::graph::Graph {
+        let graphs = self.select(Selection::of_graphs()).await;
+        let from: String = graphs
+            .bindings
+            .iter()
+            .map(|b| {
+                format!(
+                    "FROM <{}>",
+                    match b.get(&Variable::from("graph")) {
+                        Some(rdf::node::Node::UriNode { uri: id }) => id.to_string(),
+                        _ => panic!("Unexpected node"),
+                    }
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        let query =
+            DescribeQuery::unsafe_from(&format!("DESCRIBE ?x {} WHERE {{ ?x ?y ?z }}", from));
+        self.describe(query).await
+    }
 }

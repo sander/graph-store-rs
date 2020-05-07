@@ -31,5 +31,8 @@ WHERE {
         .await;
     println!("description: {:?}", result);
 
+    let result = dataset.describe_everything().await;
+    println!("description of everything: {:?}", result);
+
     dataset.delete().await;
 }
