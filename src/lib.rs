@@ -1,7 +1,7 @@
 pub mod http;
+pub mod table;
 
 use async_trait::async_trait;
-use std::collections::HashMap;
 
 /// Any resource, identified by an IRI string.
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]

@@ -10,7 +10,7 @@ async fn create_and_delete() {
     let file = DataFile::unsafe_from_turtle(
         "@base <urn:uuid:bc36c84d-30bf-4014-9940-255150891034>
 
-<#a> <#b> <#c> .
+<#a> <#b> \"c\" .
 <#d> <#e> <#f>",
     );
 
