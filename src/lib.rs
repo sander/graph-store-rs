@@ -84,6 +84,27 @@ WHERE {{
         ))
     }
 
+    pub fn of_resources_with_labels() -> Selection {
+        Selection::unsafe_from(
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?resource ?label
+WHERE {
+  GRAPH ?graph1 {
+    { ?resource ?predicate ?object }
+    UNION
+    { ?subject ?resource ?object }
+    UNION
+    { ?subject ?predicate ?resource }
+  } .
+  OPTIONAL {
+    GRAPH ?graph3 { ?resource rdfs:label ?label }
+  } .
+  FILTER ( isURI(?resource) )
+}",
+        )
+    }
+
     pub fn unsafe_from(value: &str) -> Selection {
         Selection {
             sparql_value: value.to_string(),
