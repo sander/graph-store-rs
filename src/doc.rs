@@ -1,11 +1,9 @@
 use crate::http::Dataset;
 use crate::table::Variable;
 use crate::{GraphStore, Resource, Selection};
-use rdf::graph::Graph;
 use rdf::node::Node;
-use rdf::triple::Triple;
 use sha2::{Digest, Sha256};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
 use typed_html::dom::DOMTree;
 use typed_html::{html, text};
@@ -97,7 +95,7 @@ pub async fn export_to_html<'a>(dataset: &'a Dataset<'a>) {
             )
         });
 
-        let mut doc: DOMTree<String> = html!(
+        let doc: DOMTree<String> = html!(
             <html>
                 <head>
                     <title>{ text!("{}", props.label) }</title>
@@ -109,6 +107,7 @@ pub async fn export_to_html<'a>(dataset: &'a Dataset<'a>) {
                         { links_from_html }
                         { links_to_html }
                     </ul>
+                    <a href="index.html">"Index"</a>
                 </body>
             </html>
         );
@@ -116,6 +115,35 @@ pub async fn export_to_html<'a>(dataset: &'a Dataset<'a>) {
         fs::write(
             props.file_name.to_string(),
             format!("<!doctype html>{}", doc.to_string()),
-        );
+        )
+        .expect("Could not write file");
     }
+
+    let links = map.iter().map(|(_, props)| {
+        let href = &props.file_name;
+        let label = &props.label;
+        html!(
+            <li>
+                <a href=href>{ text!("{}", label) }</a>
+            </li>
+        )
+    });
+
+    let doc: DOMTree<String> = html!(
+        <html>
+            <head>
+                <title>"Index"</title>
+                <link rel="stylesheet" href="main.css"/>
+            </head>
+            <body>
+                <h1>"Index"</h1>
+                <ul>
+                    { links }
+                </ul>
+            </body>
+        </html>
+    );
+
+    fs::write("index.html", format!("<!doctype html>{}", doc.to_string()))
+        .expect("Could not write index");
 }

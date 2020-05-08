@@ -36,7 +36,7 @@ impl<A> Table<A> {
         Table {
             bindings: bindings
                 .into_iter()
-                .map(|mut binding| {
+                .map(|binding| {
                     binding
                         .into_iter()
                         .map(|(k, v)| (Variable::from(k.as_str()), transform(v)))

@@ -1,7 +1,6 @@
 use graph_store::http::Dataset;
 use graph_store::{doc, Resource};
 use graph_store::{DataFile, DescribeQuery, Graph, GraphStore, Selection};
-use std::collections::HashSet;
 use uuid::Uuid;
 
 #[tokio::test]
