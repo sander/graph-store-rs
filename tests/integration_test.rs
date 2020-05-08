@@ -61,3 +61,13 @@ async fn html_files() {
 
     dataset.delete().await;
 }
+
+#[tokio::test]
+async fn architecture_documentation() {
+    let client = reqwest::Client::new();
+    let base = url::Url::parse("http://localhost:3030").unwrap();
+    let name = "architecture";
+    let dataset = Dataset::get_or_create(&client, base, &name).await;
+
+    doc::export_to_html(&dataset).await;
+}

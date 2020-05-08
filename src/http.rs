@@ -80,6 +80,7 @@ struct QueryResponseHead {
 enum QueryResponseValue {
     uri { value: String },
     literal { value: String },
+    bnode { value: String },
 }
 
 impl QueryResponseValue {
@@ -92,6 +93,9 @@ impl QueryResponseValue {
                 literal: value.to_string(),
                 data_type: None,
                 language: None,
+            },
+            QueryResponseValue::bnode { value } => rdf::node::Node::BlankNode {
+                id: value.to_string(),
             },
         }
     }
@@ -138,7 +142,10 @@ impl GraphStore for Dataset<'_> {
         let path = self.base.join(&self.name).unwrap();
         let response = self.client.post(path).form(&form).send().await.unwrap();
         let status = response.status();
-        let response: QueryResponse = response.json::<QueryResponse>().await.unwrap();
+        let response: QueryResponse = response
+            .json::<QueryResponse>()
+            .await
+            .expect("Unexpected response");
         match status {
             reqwest::StatusCode::OK => {
                 Table::from(response.head.vars, response.results.bindings, |b| {

@@ -59,7 +59,7 @@ pub async fn export_to_html<'a>(dataset: &'a Dataset<'a>) {
                         let href = &props.file_name;
                         html!(<a href=href>{ text!("{}", props.label) }</a>)
                     }
-                    None => html!(<a>"noprops"</a>),
+                    None => html!(<a>{ text!("{}", &resource.0) }</a>),
                 }
             }
             Some(rdf::node::Node::LiteralNode {
@@ -67,6 +67,7 @@ pub async fn export_to_html<'a>(dataset: &'a Dataset<'a>) {
                 language: _,
                 data_type: _,
             }) => html!(<a>{ text!("{}", s) }</a>),
+            Some(rdf::node::Node::BlankNode { id }) => html!(<a>{ text!("Blank node {}", id) }</a>),
             r => panic!("Unexpected resource {:?}", r),
         }
     }
